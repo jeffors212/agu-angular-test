@@ -1,26 +1,41 @@
 import { Component } from '@angular/core';
-import {FormsModule} from "@angular/forms";
-import {AuthService} from "../../services/auth.service";
-import {Router} from "@angular/router";
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MaterialModule } from '../../material.module'; // Ajuste o caminho conforme necessário
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    FormsModule
-  ],
+  imports: [ReactiveFormsModule, MaterialModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  username: string = '';
-  password: string = '';
+  loginForm: FormGroup;
+  error: string = '';
 
-  constructor(private authService: AuthService, private router: Router) {}
-
-  login() {
-    this.authService.login(this.username, this.password).subscribe(() => {
-      this.router.navigate(['/tasks']);
+  constructor(private authService: AuthService, private router: Router, private fb: FormBuilder) {
+    this.loginForm = this.fb.group({
+      username: ['', Validators.required],
+      password: ['', Validators.required]
     });
   }
+
+  login() {
+    if (this.loginForm.valid) {
+      this.authService.login(this.loginForm.value.username, this.loginForm.value.password).subscribe({
+        next: () => {
+          this.router.navigate(['/tasks']);
+          this.error = '';
+        },
+        error: (error) => {
+          this.error = 'Falha ao fazer login. Verifique suas credenciais.';
+          console.error('Error during login:', error);
+        }
+      });
+    }
+  }
 }
+  
